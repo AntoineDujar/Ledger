@@ -1,28 +1,27 @@
 import { StyleSheet, Text, View } from "react-native";
-import { useState, useEffect } from "react";
-import { supabase } from "./supabase";
-import { Session } from "@supabase/supabase-js";
-import Auth from "./Auth";
-import Counter from "./Counter";
+import { useEffect } from "react";
+import { supabase } from "./lib/supabase";
+import Auth from "./components/Auth";
+import Account from "./components/Account";
+import Counter from "./components/Counter";
+import { userAuth } from "./lib/store";
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null);
+  const session = userAuth((state) => state.currSession);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("get session: ", session);
-      setSession(session);
+      userAuth.setState({ currSession: session });
     });
 
     supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("on auth change: ", session);
-      setSession(session);
+      userAuth.setState({ currSession: session });
     });
   }, []);
 
   return (
     <View style={styles.container}>
-      <Auth />
+      {session && session.user ? <Account /> : <Auth />}
       <Counter />
     </View>
   );
@@ -34,5 +33,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
+  },
+  info: {
+    marginBottom: 10,
+    fontSize: 25,
   },
 });

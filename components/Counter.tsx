@@ -1,8 +1,8 @@
-import { supabase } from "./supabase";
+import { supabase } from "../lib/supabase";
 import { StyleSheet, Text, View } from "react-native";
-import { userCounterStore } from "./store";
+import { userCounterStore } from "../lib/store";
 import { useEffect } from "react";
-import MyButton from "./MyButton";
+import MyButton from "../MyButton";
 
 export default function Counter() {
   const count = userCounterStore((state) => state.count);

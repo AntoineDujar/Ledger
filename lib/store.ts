@@ -1,7 +1,7 @@
 import {create} from "zustand";
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-
+import { Session } from "@supabase/supabase-js";
 
 type CounterStore = {
     count: number;
@@ -23,3 +23,12 @@ name: 'food-storage',
 storage: createJSONStorage(() => AsyncStorage),
 }
 ),);
+
+type AuthState = {
+    currSession: Session | null;
+};
+
+export const userAuth = create<AuthState>(
+(set) => ({
+    currSession: null,
+}));
