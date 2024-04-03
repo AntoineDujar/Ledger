@@ -1,6 +1,6 @@
 import { supabase } from "../lib/supabase";
 import { View } from "react-native";
-import MyButton from "../MyButton";
+import MyButton from "@/ui/MyButton";
 
 const login = async function signInWithGithub() {
   const { data, error } = await supabase.auth.signInWithOAuth({
