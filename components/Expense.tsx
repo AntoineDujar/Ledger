@@ -1,4 +1,4 @@
-import React, { Children, useState } from "react";
+import React, { Children, useState, useEffect } from "react";
 import { Button, Input, Text } from "react-native-elements";
 import MyButton from "@/ui/MyButton";
 import { Alert, StyleSheet, View, AppState, FlatList } from "react-native";
@@ -56,10 +56,6 @@ export default function Spend() {
     }
   }
 
-  function fetchLocalExpense() {
-    console.log(expenses);
-  }
-
   const Item = ({ label, amount }: Expense) => {
     return (
       <View style={styles.expense}>
@@ -68,6 +64,10 @@ export default function Spend() {
       </View>
     );
   };
+
+  useEffect(() => {
+    fetchExpense();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -84,8 +84,7 @@ export default function Spend() {
         value={label}
       />
       <MyButton label="Add" onPress={() => addExpense()} />
-      <MyButton label="Fetch" onPress={() => fetchExpense()} />
-      <MyButton label="Fetch Local" onPress={() => fetchLocalExpense()} />
+      <MyButton label="Sync" onPress={() => fetchExpense()} />
 
       <FlatList
         data={expenses}

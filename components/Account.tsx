@@ -15,7 +15,7 @@ export default function Account() {
   return (
     <View style={styles.container}>
       {session && session.user ? (
-        <Text style={styles.info}>Welcome: {session.user.email}</Text>
+        <Text style={styles.info}>Welcome {session.user.email}</Text>
       ) : (
         <Text style={styles.info}>Problem with user</Text>
       )}
