@@ -24,6 +24,36 @@ storage: createJSONStorage(() => AsyncStorage),
 }
 ),);
 
+interface ExpenseInterface {
+    id: number;
+    label: string;
+    amount: number;
+    auth_id: string;
+    created_at: string;
+  }
+
+type Expense = {
+    expense: Array<ExpenseInterface>;
+}
+
+export const localExpenses = create(persist<Expense>(
+    (set) => ({
+        expense: [],
+    }), {
+        name: 'local-expenses',
+        storage: createJSONStorage(() => AsyncStorage),
+    }
+),);
+
+export const toSyncExpenses = create(persist<Expense>(
+    (set) => ({
+        expense: [],
+    }), {
+        name: 'local-toSync-expenses',
+        storage: createJSONStorage(() => AsyncStorage),
+    }
+),);
+
 type AuthState = {
     currSession: Session | null;
 };

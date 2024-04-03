@@ -3,7 +3,7 @@ import { Button, Input, Text } from "react-native-elements";
 import MyButton from "@/ui/MyButton";
 import { Alert, StyleSheet, View, AppState, FlatList } from "react-native";
 import { supabase } from "@/lib/supabase";
-import { userAuth } from "@/lib/store";
+import { localExpenses, toSyncExpenses, userAuth } from "@/lib/store";
 
 interface Expense {
   id: number;
@@ -18,7 +18,24 @@ export default function Spend() {
 
   const [amount, setAmount] = useState("");
   const [label, setLabel] = useState("");
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+
+  function addLocalExpense() {
+    const n = toSyncExpenses.getState().expense.length;
+    const temp: Expense = {
+      id: n,
+      label: label,
+      amount: parseFloat(amount),
+      auth_id: "",
+      created_at: "",
+    };
+    console.log(temp);
+    const current = toSyncExpenses.getState().expense;
+    toSyncExpenses.setState({ expense: [...current, temp] });
+  }
+
+  function whatToSync() {
+    console.log(toSyncExpenses.getState().expense);
+  }
 
   async function addExpense() {
     console.log("adding expense");
@@ -33,6 +50,7 @@ export default function Spend() {
         console.log("worked well!");
         setAmount("");
         setLabel("");
+        fetchExpense();
       }
     } else {
       console.log("not logged in :(");
@@ -51,7 +69,7 @@ export default function Spend() {
         console.log(error);
       } else {
         console.log("fetched worked!");
-        setExpenses(data);
+        localExpenses.setState({ expense: data });
       }
     }
   }
@@ -85,9 +103,11 @@ export default function Spend() {
       />
       <MyButton label="Add" onPress={() => addExpense()} />
       <MyButton label="Sync" onPress={() => fetchExpense()} />
+      <MyButton label="local" onPress={() => addLocalExpense()} />
+      <MyButton label="what?" onPress={() => whatToSync()} />
 
       <FlatList
-        data={expenses}
+        data={localExpenses((state) => state.expense)}
         renderItem={({ item }) => <Item {...item} />}
         keyExtractor={(item) => item.id.toString()}
       />
