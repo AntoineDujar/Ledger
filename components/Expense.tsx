@@ -18,8 +18,9 @@ export default function Spend() {
 
   const [amount, setAmount] = useState("");
   const [label, setLabel] = useState("");
+  const [combinedExpenses, setCombinedExpenses] = useState<Expense[]>([]);
 
-  function addLocalExpense() {
+  async function addLocalExpense() {
     const n = toSyncExpenses.getState().expense.length;
     const temp: Expense = {
       id: n,
@@ -30,7 +31,31 @@ export default function Spend() {
     };
     console.log(temp);
     const current = toSyncExpenses.getState().expense;
-    toSyncExpenses.setState({ expense: [...current, temp] });
+    toSyncExpenses.setState({ expense: [temp, ...current] });
+    setAmount("");
+    setLabel("");
+    const newCurrent = toSyncExpenses.getState().expense;
+
+    let resultCurrent = [];
+    //try to upload the tosync entries to supabase
+    if (session && session.user) {
+      for (const entry of newCurrent) {
+        const { error } = await supabase.from("Expenditure").insert({
+          label: entry.label,
+          amount: entry.amount,
+          auth_id: session.user.id,
+        });
+
+        if (error) {
+          console.log(error);
+          resultCurrent.push(entry);
+        } else {
+          console.log("worked well!");
+        }
+      }
+      toSyncExpenses.setState({ expense: resultCurrent });
+    }
+    fetchExpense();
   }
 
   function whatToSync() {
@@ -46,11 +71,13 @@ export default function Spend() {
 
       if (error) {
         console.log(error);
+        return "offline";
       } else {
         console.log("worked well!");
         setAmount("");
         setLabel("");
         fetchExpense();
+        return "success";
       }
     } else {
       console.log("not logged in :(");
@@ -72,6 +99,10 @@ export default function Spend() {
         localExpenses.setState({ expense: data });
       }
     }
+    setCombinedExpenses([
+      ...localExpenses.getState().expense,
+      ...toSyncExpenses.getState().expense,
+    ]);
   }
 
   const Item = ({ label, amount }: Expense) => {
@@ -85,6 +116,10 @@ export default function Spend() {
 
   useEffect(() => {
     fetchExpense();
+    setCombinedExpenses([
+      ...localExpenses.getState().expense,
+      ...toSyncExpenses.getState().expense,
+    ]);
   }, []);
 
   return (
@@ -107,7 +142,7 @@ export default function Spend() {
       <MyButton label="what?" onPress={() => whatToSync()} />
 
       <FlatList
-        data={localExpenses((state) => state.expense)}
+        data={combinedExpenses}
         renderItem={({ item }) => <Item {...item} />}
         keyExtractor={(item) => item.id.toString()}
       />
