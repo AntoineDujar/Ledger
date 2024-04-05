@@ -1,10 +1,12 @@
 import React from 'react';
 import {
   Pressable,
-  Text,
+  View,
   StyleSheet,
   PressableProps,
 } from 'react-native';
+
+import { Button, Text, Theme } from 'tamagui';
 
 interface ButtonProps extends PressableProps {
   label: string;
@@ -17,28 +19,22 @@ const MyButton: React.FC<ButtonProps> = ({
   ...props
 }) => {
   return (
-    <Pressable onPress={onPress} style={styles.button} {...props}>
-      <Text style={styles.buttonLabel}>{label}</Text>
-    </Pressable>
+    <Theme name='light'>
+      <Theme name='green'>
+        <Button
+          alignSelf='center'
+          minWidth={220}
+          size='$3'
+          spaceFlex={true}
+          onPress={onPress}
+        >
+          <Text fontFamily='$body' fontWeight='800'>
+            {label}
+          </Text>
+        </Button>
+      </Theme>
+    </Theme>
   );
 };
-
-const styles = StyleSheet.create({
-  button: {
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    backgroundColor: 'grey',
-    width: 200,
-    height: 25,
-    marginBottom: 10,
-  },
-
-  buttonLabel: {
-    color: 'white',
-    fontSize: 16,
-  },
-});
 
 export default MyButton;

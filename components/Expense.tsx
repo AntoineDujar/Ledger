@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { localExpenses, toSyncExpenses, userAuth } from '@/lib/store';
+import { YStack } from 'tamagui';
 
 interface Expense {
   id: number;
@@ -73,13 +74,11 @@ export default function Spend() {
   async function addExpense() {
     console.log('adding expense');
     if (session && session.user) {
-      const { error } = await supabase
-        .from('Expenditure')
-        .insert({
-          label: label,
-          amount: amount,
-          auth_id: session.user.id,
-        });
+      const { error } = await supabase.from('Expenditure').insert({
+        label: label,
+        amount: amount,
+        auth_id: session.user.id,
+      });
 
       if (error) {
         console.log(error);
@@ -148,10 +147,12 @@ export default function Spend() {
         onChangeText={(text) => setLabel(text)}
         value={label}
       />
-      <MyButton label='Add' onPress={() => addExpense()} />
-      <MyButton label='Sync' onPress={() => fetchExpense()} />
-      <MyButton label='local' onPress={() => addLocalExpense()} />
-      <MyButton label='what?' onPress={() => whatToSync()} />
+      <YStack padding='$3' minWidth={250} alignSelf='center' gap='$2'>
+        <MyButton label='Add' onPress={() => addExpense()} />
+        <MyButton label='Sync' onPress={() => fetchExpense()} />
+        <MyButton label='local' onPress={() => addLocalExpense()} />
+        <MyButton label='what?' onPress={() => whatToSync()} />
+      </YStack>
 
       <FlatList
         data={combinedExpenses}
