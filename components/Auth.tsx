@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { Alert, StyleSheet, View, AppState } from "react-native";
-import { supabase } from "../lib/supabase";
-import { Button, Input } from "react-native-elements";
-import MyButton from "../ui/MyButton";
+import React, { useState } from 'react';
+import { Alert, StyleSheet, View, AppState } from 'react-native';
+import { supabase } from '../lib/supabase';
+import { Button, Input } from 'react-native-elements';
+import MyButton from '../ui/MyButton';
 
 // Tells Supabase Auth to continuously refresh the session automatically if
 // the app is in the foreground. When this is added, you will continue to receive
 // `onAuthStateChange` events with the `TOKEN_REFRESHED` or `SIGNED_OUT` event
 // if the user's session is terminated. This should only be registered once.
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
+AppState.addEventListener('change', (state) => {
+  if (state === 'active') {
     supabase.auth.startAutoRefresh();
   } else {
     supabase.auth.stopAutoRefresh();
@@ -17,8 +17,8 @@ AppState.addEventListener("change", (state) => {
 });
 
 export default function Auth() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function signInWithEmail() {
@@ -44,7 +44,7 @@ export default function Auth() {
 
     if (error) Alert.alert(error.message);
     if (!session)
-      Alert.alert("Please check your inbox for email verification!");
+      Alert.alert('Please check your inbox for email verification!');
     setLoading(false);
   }
 
@@ -52,30 +52,30 @@ export default function Auth() {
     <View style={styles.container}>
       <View>
         <Input
-          label="Email"
-          leftIcon={{ type: "font-awesome", name: "envelope" }}
+          label='Email'
+          leftIcon={{ type: 'font-awesome', name: 'envelope' }}
           onChangeText={(text) => setEmail(text)}
           value={email}
-          placeholder="email@address.com"
-          autoCapitalize={"none"}
+          placeholder='email@address.com'
+          autoCapitalize={'none'}
         />
       </View>
       <View>
         <Input
-          label="Password"
-          leftIcon={{ type: "font-awesome", name: "lock" }}
+          label='Password'
+          leftIcon={{ type: 'font-awesome', name: 'lock' }}
           onChangeText={(text) => setPassword(text)}
           value={password}
           secureTextEntry={true}
-          placeholder="Password"
-          autoCapitalize={"none"}
+          placeholder='Password'
+          autoCapitalize={'none'}
         />
       </View>
       <View>
-        <MyButton label="Sign in" onPress={() => signInWithEmail()} />
+        <MyButton label='Sign in' onPress={() => signInWithEmail()} />
       </View>
       <View>
-        <MyButton label="Sign up" onPress={() => signUpWithEmail()} />
+        <MyButton label='Sign up' onPress={() => signUpWithEmail()} />
       </View>
     </View>
   );
@@ -83,13 +83,13 @@ export default function Auth() {
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   verticallySpaced: {
     paddingTop: 4,
     paddingBottom: 4,
-    alignSelf: "stretch",
+    alignSelf: 'stretch',
   },
   mt20: {
     marginTop: 20,

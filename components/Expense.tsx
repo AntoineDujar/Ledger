@@ -1,9 +1,15 @@
-import React, { Children, useState, useEffect } from "react";
-import { Button, Input, Text } from "react-native-elements";
-import MyButton from "@/ui/MyButton";
-import { Alert, StyleSheet, View, AppState, FlatList } from "react-native";
-import { supabase } from "@/lib/supabase";
-import { localExpenses, toSyncExpenses, userAuth } from "@/lib/store";
+import React, { Children, useState, useEffect } from 'react';
+import { Button, Input, Text } from 'react-native-elements';
+import MyButton from '@/ui/MyButton';
+import {
+  Alert,
+  StyleSheet,
+  View,
+  AppState,
+  FlatList,
+} from 'react-native';
+import { supabase } from '@/lib/supabase';
+import { localExpenses, toSyncExpenses, userAuth } from '@/lib/store';
 
 interface Expense {
   id: number;
@@ -16,9 +22,11 @@ interface Expense {
 export default function Spend() {
   const session = userAuth((state) => state.currSession);
 
-  const [amount, setAmount] = useState("");
-  const [label, setLabel] = useState("");
-  const [combinedExpenses, setCombinedExpenses] = useState<Expense[]>([]);
+  const [amount, setAmount] = useState('');
+  const [label, setLabel] = useState('');
+  const [combinedExpenses, setCombinedExpenses] = useState<Expense[]>(
+    [],
+  );
 
   async function addLocalExpense() {
     const n = toSyncExpenses.getState().expense.length;
@@ -26,21 +34,21 @@ export default function Spend() {
       id: n,
       label: label,
       amount: parseFloat(amount),
-      auth_id: "",
-      created_at: "",
+      auth_id: '',
+      created_at: '',
     };
     console.log(temp);
     const current = toSyncExpenses.getState().expense;
     toSyncExpenses.setState({ expense: [temp, ...current] });
-    setAmount("");
-    setLabel("");
+    setAmount('');
+    setLabel('');
     const newCurrent = toSyncExpenses.getState().expense;
 
     let resultCurrent = [];
     //try to upload the tosync entries to supabase
     if (session && session.user) {
       for (const entry of newCurrent) {
-        const { error } = await supabase.from("Expenditure").insert({
+        const { error } = await supabase.from('Expenditure').insert({
           label: entry.label,
           amount: entry.amount,
           auth_id: session.user.id,
@@ -50,7 +58,7 @@ export default function Spend() {
           console.log(error);
           resultCurrent.push(entry);
         } else {
-          console.log("worked well!");
+          console.log('worked well!');
         }
       }
       toSyncExpenses.setState({ expense: resultCurrent });
@@ -63,39 +71,43 @@ export default function Spend() {
   }
 
   async function addExpense() {
-    console.log("adding expense");
+    console.log('adding expense');
     if (session && session.user) {
       const { error } = await supabase
-        .from("Expenditure")
-        .insert({ label: label, amount: amount, auth_id: session.user.id });
+        .from('Expenditure')
+        .insert({
+          label: label,
+          amount: amount,
+          auth_id: session.user.id,
+        });
 
       if (error) {
         console.log(error);
-        return "offline";
+        return 'offline';
       } else {
-        console.log("worked well!");
-        setAmount("");
-        setLabel("");
+        console.log('worked well!');
+        setAmount('');
+        setLabel('');
         fetchExpense();
-        return "success";
+        return 'success';
       }
     } else {
-      console.log("not logged in :(");
+      console.log('not logged in :(');
     }
   }
 
   async function fetchExpense() {
-    console.log("fetching expenses");
+    console.log('fetching expenses');
     if (session && session.user) {
       const { data, error } = await supabase
-        .from("Expenditure")
+        .from('Expenditure')
         .select()
-        .eq("auth_id", session.user.id);
+        .eq('auth_id', session.user.id);
 
       if (error) {
         console.log(error);
       } else {
-        console.log("fetched worked!");
+        console.log('fetched worked!');
         localExpenses.setState({ expense: data });
       }
     }
@@ -125,21 +137,21 @@ export default function Spend() {
   return (
     <View style={styles.container}>
       <Input
-        label="Amount"
-        leftIcon={{ type: "font-awesome", name: "gift" }}
+        label='Amount'
+        leftIcon={{ type: 'font-awesome', name: 'gift' }}
         onChangeText={(text) => setAmount(text)}
         value={amount}
       />
       <Input
-        label="Label"
-        leftIcon={{ type: "font-awesome", name: "pencil" }}
+        label='Label'
+        leftIcon={{ type: 'font-awesome', name: 'pencil' }}
         onChangeText={(text) => setLabel(text)}
         value={label}
       />
-      <MyButton label="Add" onPress={() => addExpense()} />
-      <MyButton label="Sync" onPress={() => fetchExpense()} />
-      <MyButton label="local" onPress={() => addLocalExpense()} />
-      <MyButton label="what?" onPress={() => whatToSync()} />
+      <MyButton label='Add' onPress={() => addExpense()} />
+      <MyButton label='Sync' onPress={() => fetchExpense()} />
+      <MyButton label='local' onPress={() => addLocalExpense()} />
+      <MyButton label='what?' onPress={() => whatToSync()} />
 
       <FlatList
         data={combinedExpenses}
@@ -152,15 +164,15 @@ export default function Spend() {
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   info: {
     marginBottom: 10,
     fontSize: 25,
   },
   expense: {
-    flexDirection: "row",
+    flexDirection: 'row',
     flex: 1,
   },
   item: {
