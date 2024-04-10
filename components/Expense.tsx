@@ -1,125 +1,91 @@
-import React, { Children, useState, useEffect } from "react";
-import { Button, Input, Text } from "react-native-elements";
+import React, { useState, useEffect } from "react";
+import { Input, Text } from "react-native-elements";
 import MyButton from "@/ui/MyButton";
-import { Alert, StyleSheet, View, AppState, FlatList } from "react-native";
-import { supabase } from "@/lib/supabase";
-import { localExpenses, toSyncExpenses, userAuth } from "@/lib/store";
-
-interface Expense {
-  id: number;
-  label: string;
-  amount: number;
-  auth_id: string;
-  created_at: string;
-}
+import { Alert, StyleSheet, View, FlatList } from "react-native";
+import { localExpenses, toInsertExpenses, toUpdateExpenses } from "@/lib/store";
+import { ExpenseFormat, syncExpense } from "@/lib/sync";
 
 export default function Spend() {
-  const session = userAuth((state) => state.currSession);
+  const [amountInput, setAmountInput] = useState("");
+  const [labelInput, setLabelInput] = useState("");
+  const [triggerRerender, setTriggerRerender] = useState(false);
 
-  const [amount, setAmount] = useState("");
-  const [label, setLabel] = useState("");
-  const [combinedExpenses, setCombinedExpenses] = useState<Expense[]>([]);
-
-  async function addLocalExpense() {
-    const n = toSyncExpenses.getState().expense.length;
-    const temp: Expense = {
-      id: n,
-      label: label,
-      amount: parseFloat(amount),
+  async function insertExpense() {
+    const n = toInsertExpenses.getState().expense.length;
+    const temp: ExpenseFormat = {
+      id: n.toString() + "toInsert",
+      label: labelInput,
+      amount: parseFloat(amountInput),
       auth_id: "",
       created_at: "",
     };
     console.log(temp);
-    const current = toSyncExpenses.getState().expense;
-    toSyncExpenses.setState({ expense: [temp, ...current] });
-    setAmount("");
-    setLabel("");
-    const newCurrent = toSyncExpenses.getState().expense;
+    const current = toInsertExpenses.getState().expense;
+    toInsertExpenses.setState({ expense: [...current, temp] });
 
-    let resultCurrent = [];
-    //try to upload the tosync entries to supabase
-    if (session && session.user) {
-      for (const entry of newCurrent) {
-        const { error } = await supabase.from("Expenditure").insert({
-          label: entry.label,
-          amount: entry.amount,
-          auth_id: session.user.id,
-        });
+    const localCurrent = localExpenses.getState().expense;
+    localExpenses.setState({ expense: [...localCurrent, temp] });
 
-        if (error) {
-          console.log(error);
-          resultCurrent.push(entry);
-        } else {
-          console.log("worked well!");
-        }
-      }
-      toSyncExpenses.setState({ expense: resultCurrent });
-    }
-    fetchExpense();
+    setAmountInput("");
+    setLabelInput("");
+
+    syncRenderer();
   }
 
-  function whatToSync() {
-    console.log(toSyncExpenses.getState().expense);
+  async function updateExpense(index: number, id: string) {
+    const n = toUpdateExpenses.getState().expense.length;
+    const temp: ExpenseFormat = {
+      id: id.toString(),
+      label: labelInput,
+      amount: parseFloat(amountInput),
+      auth_id: "",
+      created_at: "",
+    };
+    console.log(temp);
+    const current = toUpdateExpenses.getState().expense;
+    toUpdateExpenses.setState({ expense: [...current, temp] });
+
+    const localCurrent = localExpenses.getState().expense;
+    localCurrent[index] = temp;
+    localExpenses.setState({ expense: localCurrent });
+
+    syncRenderer();
+    setTriggerRerender(!triggerRerender);
   }
 
-  async function addExpense() {
-    console.log("adding expense");
-    if (session && session.user) {
-      const { error } = await supabase
-        .from("Expenditure")
-        .insert({ label: label, amount: amount, auth_id: session.user.id });
-
-      if (error) {
-        console.log(error);
-        return "offline";
-      } else {
-        console.log("worked well!");
-        setAmount("");
-        setLabel("");
-        fetchExpense();
-        return "success";
-      }
-    } else {
-      console.log("not logged in :(");
-    }
+  async function syncRenderer() {
+    await syncExpense();
+    setTriggerRerender(!triggerRerender);
   }
 
-  async function fetchExpense() {
-    console.log("fetching expenses");
-    if (session && session.user) {
-      const { data, error } = await supabase
-        .from("Expenditure")
-        .select()
-        .eq("auth_id", session.user.id);
-
-      if (error) {
-        console.log(error);
-      } else {
-        console.log("fetched worked!");
-        localExpenses.setState({ expense: data });
-      }
-    }
-    setCombinedExpenses([
-      ...localExpenses.getState().expense,
-      ...toSyncExpenses.getState().expense,
-    ]);
+  function printToInsert() {
+    // console.log(toInsertExpenses.getState().expense);
+    console.log(localExpenses.getState().expense);
   }
 
-  const Item = ({ label, amount }: Expense) => {
+  const Item = ({
+    label,
+    amount,
+    id,
+    index,
+  }: ExpenseFormat & { index: number }) => {
     return (
       <View style={styles.expense}>
         <Text style={styles.item}>{label}</Text>
         <Text style={styles.item}>{amount}</Text>
+        <MyButton label="Edit" onPress={() => updateExpense(index, id)} />
+        <MyButton label="Delete" onPress={() => updateExpense(index, id)} />
       </View>
     );
   };
 
   useEffect(() => {
-    fetchExpense();
-    setCombinedExpenses([
-      ...localExpenses.getState().expense,
-      ...toSyncExpenses.getState().expense,
-    ]);
+    // fetchExpense();
+    // const localExpenseTemp = localExpenses.getState().expense;
+    // const toInsertExpenseTemp = toInsertExpenses.getState().expense;
+    // localExpenses.setState({
+    //   expense: [...localExpenseTemp, ...toInsertExpenseTemp],
+    // });
   }, []);
 
   return (
@@ -127,24 +93,28 @@ export default function Spend() {
       <Input
         label="Amount"
         leftIcon={{ type: "font-awesome", name: "gift" }}
-        onChangeText={(text) => setAmount(text)}
-        value={amount}
+        onChangeText={(text) => setAmountInput(text)}
+        value={amountInput}
       />
       <Input
         label="Label"
         leftIcon={{ type: "font-awesome", name: "pencil" }}
-        onChangeText={(text) => setLabel(text)}
-        value={label}
+        onChangeText={(text) => setLabelInput(text)}
+        value={labelInput}
       />
-      <MyButton label="Add" onPress={() => addExpense()} />
-      <MyButton label="Sync" onPress={() => fetchExpense()} />
-      <MyButton label="local" onPress={() => addLocalExpense()} />
-      <MyButton label="what?" onPress={() => whatToSync()} />
+      <MyButton label="Insert" onPress={() => insertExpense()} />
+      <MyButton label="Sync" onPress={() => syncRenderer()} />
+      <MyButton label="Print insert" onPress={() => printToInsert()} />
+      <MyButton
+        label="TriggerFlip"
+        onPress={() => setTriggerRerender(!triggerRerender)}
+      />
 
       <FlatList
-        data={combinedExpenses}
-        renderItem={({ item }) => <Item {...item} />}
+        data={localExpenses.getState().expense}
+        renderItem={({ item, index }) => <Item {...item} index={index} />}
         keyExtractor={(item) => item.id.toString()}
+        extraData={triggerRerender}
       />
     </View>
   );

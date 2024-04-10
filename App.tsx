@@ -4,7 +4,6 @@ import { supabase } from "./lib/supabase";
 import Auth from "./components/Auth";
 import Expense from "./components/Expense";
 import Account from "./components/Account";
-import Counter from "./components/Counter";
 import { userAuth } from "./lib/store";
 
 export default function App() {
