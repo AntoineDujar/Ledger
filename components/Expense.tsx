@@ -18,6 +18,7 @@ export default function Spend() {
       amount: parseFloat(amountInput),
       auth_id: "",
       created_at: "",
+      deleted_at: "",
     };
     console.log(temp);
     const current = toInsertExpenses.getState().expense;
@@ -29,17 +30,17 @@ export default function Spend() {
     setAmountInput("");
     setLabelInput("");
 
-    syncRenderer();
+    await syncRenderer();
   }
 
   async function updateExpense(index: number, id: string) {
-    const n = toUpdateExpenses.getState().expense.length;
     const temp: ExpenseFormat = {
       id: id.toString(),
       label: labelInput,
       amount: parseFloat(amountInput),
       auth_id: "",
       created_at: "",
+      deleted_at: null,
     };
     console.log(temp);
     const current = toUpdateExpenses.getState().expense;
@@ -49,8 +50,32 @@ export default function Spend() {
     localCurrent[index] = temp;
     localExpenses.setState({ expense: localCurrent });
 
-    syncRenderer();
-    setTriggerRerender(!triggerRerender);
+    await syncRenderer();
+  }
+
+  async function deleteExpense(
+    index: number,
+    id: string,
+    amount: number,
+    label: string
+  ) {
+    const temp: ExpenseFormat = {
+      id: id.toString(),
+      label: label,
+      amount: amount,
+      auth_id: "",
+      created_at: "",
+      deleted_at: Date(),
+    };
+    console.log(temp);
+    const current = toUpdateExpenses.getState().expense;
+    toUpdateExpenses.setState({ expense: [...current, temp] });
+
+    const localCurrent = localExpenses.getState().expense;
+    localCurrent[index] = temp;
+    localExpenses.setState({ expense: localCurrent });
+
+    await syncRenderer();
   }
 
   async function syncRenderer() {
@@ -74,7 +99,10 @@ export default function Spend() {
         <Text style={styles.item}>{label}</Text>
         <Text style={styles.item}>{amount}</Text>
         <MyButton label="Edit" onPress={() => updateExpense(index, id)} />
-        <MyButton label="Delete" onPress={() => updateExpense(index, id)} />
+        <MyButton
+          label="Delete"
+          onPress={() => deleteExpense(index, id, amount, label)}
+        />
       </View>
     );
   };
@@ -104,11 +132,8 @@ export default function Spend() {
       />
       <MyButton label="Insert" onPress={() => insertExpense()} />
       <MyButton label="Sync" onPress={() => syncRenderer()} />
-      <MyButton label="Print insert" onPress={() => printToInsert()} />
-      <MyButton
-        label="TriggerFlip"
-        onPress={() => setTriggerRerender(!triggerRerender)}
-      />
+      {/* <MyButton label="Print insert" onPress={() => printToInsert()} /> */}
+      {/* <MyButton label="TriggerFlip" onPress={() => setTriggerRerender(!triggerRerender)}/> */}
 
       <FlatList
         data={localExpenses.getState().expense}

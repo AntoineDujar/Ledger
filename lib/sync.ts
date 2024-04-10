@@ -13,6 +13,7 @@ export interface ExpenseFormat {
     amount: number;
     auth_id: string;
     created_at: string;
+    deleted_at: string | null;
   }
 
   export const syncExpense =  async () => {
@@ -50,6 +51,7 @@ export interface ExpenseFormat {
             label: entry.label,
             amount: entry.amount,
             auth_id: session.user.id,
+            date_deleted: entry.deleted_at
           })
           .eq("id", entry.id);
 
@@ -66,7 +68,9 @@ export interface ExpenseFormat {
       const { data, error } = await supabase
         .from("Expenditure")
         .select()
-        .eq("auth_id", session.user.id);
+        .eq("auth_id", session.user.id)
+        .is("date_deleted", null);
+
 
       if (error) {
         console.log(error);
