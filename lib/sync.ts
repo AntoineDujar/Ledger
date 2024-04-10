@@ -13,7 +13,7 @@ export interface ExpenseFormat {
     amount: number;
     auth_id: string;
     created_at: string;
-    deleted_at: string | null;
+    date_deleted: string | null;
   }
 
   export const syncExpense =  async () => {
@@ -28,10 +28,12 @@ export interface ExpenseFormat {
       //try to upload the tosync entries to supabase
 
         for (const entry of insertCurrent) {
+        console.log(entry)
           const { error } = await supabase.from("Expenditure").insert({
             label: entry.label,
             amount: entry.amount,
             auth_id: session.user.id,
+            date_deleted: entry.date_deleted
           });
 
           if (error) {
@@ -51,7 +53,7 @@ export interface ExpenseFormat {
             label: entry.label,
             amount: entry.amount,
             auth_id: session.user.id,
-            date_deleted: entry.deleted_at
+            date_deleted: entry.date_deleted
           })
           .eq("id", entry.id);
 

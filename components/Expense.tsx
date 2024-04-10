@@ -18,8 +18,9 @@ export default function Spend() {
       amount: parseFloat(amountInput),
       auth_id: "",
       created_at: "",
-      deleted_at: "",
+      date_deleted: null,
     };
+
     console.log(temp);
     const current = toInsertExpenses.getState().expense;
     toInsertExpenses.setState({ expense: [...current, temp] });
@@ -35,17 +36,23 @@ export default function Spend() {
 
   async function updateExpense(index: number, id: string) {
     const temp: ExpenseFormat = {
-      id: id.toString(),
+      id: id,
       label: labelInput,
       amount: parseFloat(amountInput),
       auth_id: "",
       created_at: "",
-      deleted_at: null,
+      date_deleted: null,
     };
-    console.log(temp);
-    const current = toUpdateExpenses.getState().expense;
-    toUpdateExpenses.setState({ expense: [...current, temp] });
-
+    if (id.toString().includes("toInsert")) {
+      const index = toInsertExpenses
+        .getState()
+        .expense.findIndex((expense) => expense.id === id);
+      const current = toInsertExpenses.getState().expense;
+      current[index] = temp;
+    } else {
+      const current = toUpdateExpenses.getState().expense;
+      toUpdateExpenses.setState({ expense: [...current, temp] });
+    }
     const localCurrent = localExpenses.getState().expense;
     localCurrent[index] = temp;
     localExpenses.setState({ expense: localCurrent });
@@ -60,22 +67,29 @@ export default function Spend() {
     label: string
   ) {
     const temp: ExpenseFormat = {
-      id: id.toString(),
+      id: id,
       label: label,
       amount: amount,
       auth_id: "",
       created_at: "",
-      deleted_at: Date(),
+      date_deleted: Date(),
     };
-    console.log(temp);
-    const current = toUpdateExpenses.getState().expense;
-    toUpdateExpenses.setState({ expense: [...current, temp] });
-
+    if (id.toString().includes("toInsert")) {
+      const index = toInsertExpenses
+        .getState()
+        .expense.findIndex((expense) => expense.id === id);
+      const current = toInsertExpenses.getState().expense;
+      current[index] = temp;
+    } else {
+      const current = toUpdateExpenses.getState().expense;
+      toUpdateExpenses.setState({ expense: [...current, temp] });
+    }
     const localCurrent = localExpenses.getState().expense;
     localCurrent[index] = temp;
     localExpenses.setState({ expense: localCurrent });
 
     await syncRenderer();
+    hideDeleted();
   }
 
   async function syncRenderer() {
@@ -86,6 +100,14 @@ export default function Spend() {
   function printToInsert() {
     // console.log(toInsertExpenses.getState().expense);
     console.log(localExpenses.getState().expense);
+  }
+
+  function hideDeleted() {
+    const current = localExpenses
+      .getState()
+      .expense.filter((entry) => entry.date_deleted === null);
+    localExpenses.setState({ expense: current });
+    setTriggerRerender(!triggerRerender);
   }
 
   const Item = ({
@@ -107,15 +129,6 @@ export default function Spend() {
     );
   };
 
-  useEffect(() => {
-    // fetchExpense();
-    // const localExpenseTemp = localExpenses.getState().expense;
-    // const toInsertExpenseTemp = toInsertExpenses.getState().expense;
-    // localExpenses.setState({
-    //   expense: [...localExpenseTemp, ...toInsertExpenseTemp],
-    // });
-  }, []);
-
   return (
     <View style={styles.container}>
       <Input
@@ -132,8 +145,12 @@ export default function Spend() {
       />
       <MyButton label="Insert" onPress={() => insertExpense()} />
       <MyButton label="Sync" onPress={() => syncRenderer()} />
-      {/* <MyButton label="Print insert" onPress={() => printToInsert()} /> */}
-      {/* <MyButton label="TriggerFlip" onPress={() => setTriggerRerender(!triggerRerender)}/> */}
+      <MyButton label="Print insert" onPress={() => printToInsert()} />
+      <MyButton
+        label="TriggerFlip"
+        onPress={() => setTriggerRerender(!triggerRerender)}
+      />
+      <MyButton label="hideDelete" onPress={() => hideDeleted()} />
 
       <FlatList
         data={localExpenses.getState().expense}
