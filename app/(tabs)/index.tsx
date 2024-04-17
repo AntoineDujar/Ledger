@@ -1,10 +1,11 @@
-import { StyleSheet, Text, SafeAreaView } from 'react-native';
+import { Link, router } from 'expo-router';
+import { StyleSheet } from 'react-native';
 import { useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import Auth from '../components/Auth';
-import Expense from '../components/Expense';
-import Account from '../components/Account';
-import { userAuth } from '../lib/store';
+import { supabase } from '../../lib/supabase';
+import Auth from '../../components/Auth';
+import Expense from '../../components/Expense';
+import Account from '../../components/Account';
+import { userAuth } from '../../lib/store';
 import '@tamagui/core/reset.css';
 import {
   Tamagui,
@@ -12,7 +13,8 @@ import {
   View,
   createTamagui,
 } from '@tamagui/core';
-import config from '../tamagui.config';
+import config from '../../tamagui.config';
+import MyButton from '@/ui/MyButton';
 
 const tamaGuiconfig = createTamagui(config);
 
@@ -46,7 +48,11 @@ export default function App() {
         ) : (
           <Auth />
         )}
-        {/* <Counter /> */}
+        <Link href='/user/'>Go to user page</Link>
+        <MyButton
+          label='to user page'
+          onPress={() => router.push('/user/')}
+        />
       </View>
     </TamaguiProvider>
   );
