@@ -1,10 +1,9 @@
-import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, SafeAreaView } from 'react-native';
 import { useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import Auth from './components/Auth';
 import Expense from './components/Expense';
 import Account from './components/Account';
-import Counter from './components/Counter';
 import { userAuth } from './lib/store';
 import '@tamagui/core/reset.css';
 import {
