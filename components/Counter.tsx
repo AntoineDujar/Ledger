@@ -1,8 +1,8 @@
-import { supabase } from "../lib/supabase";
-import { StyleSheet, Text, View } from "react-native";
-import { userCounterStore } from "../lib/store";
-import { useEffect } from "react";
-import MyButton from "../ui/MyButton";
+import { supabase } from '../lib/supabase';
+import { StyleSheet, Text, View } from 'react-native';
+import { userCounterStore } from '../lib/store';
+import { useEffect } from 'react';
+import MyButton from '../ui/MyButton';
 
 export default function Counter() {
   const count = userCounterStore((state) => state.count);
@@ -11,9 +11,9 @@ export default function Counter() {
 
   const sync = async () => {
     const { data, error } = await supabase
-      .from("counter")
+      .from('counter')
       .select()
-      .eq("id", "1");
+      .eq('id', '1');
 
     if (data) {
       // console.log(data[0].counter);
@@ -21,20 +21,20 @@ export default function Counter() {
     }
 
     if (error) {
-      console.log("device is offline");
-      console.log("sync error:", error);
+      console.log('device is offline');
+      console.log('sync error:', error);
     }
   };
 
   const insertSync = async () => {
     const { error } = await supabase
-      .from("counter")
+      .from('counter')
       .update({ counter: userCounterStore.getState().count })
-      .eq("id", 1);
+      .eq('id', 1);
 
     if (error) {
-      console.log("device is offline");
-      console.log("sync error:", error);
+      console.log('device is offline');
+      console.log('sync error:', error);
     }
   };
 
@@ -56,9 +56,9 @@ export default function Counter() {
   return (
     <View>
       <Text style={styles.info}>Zustand count: {count}</Text>
-      <MyButton label="increment" onPress={incrementSync} />
-      <MyButton label="decrement" onPress={decrementSync} />
-      <MyButton label="sync" onPress={sync} />
+      <MyButton label='increment' onPress={incrementSync} />
+      <MyButton label='decrement' onPress={decrementSync} />
+      <MyButton label='sync' onPress={sync} />
     </View>
   );
 }
