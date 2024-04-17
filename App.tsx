@@ -1,4 +1,4 @@
-import { StyleSheet, Text, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
 import { useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import Auth from './components/Auth';

@@ -9,155 +9,173 @@ import {
   FlatList,
 } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { localExpenses, toSyncExpenses, userAuth } from '@/lib/store';
+import {
+  localExpenses,
+  toInsertExpenses,
+  toUpdateExpenses,
+  userAuth,
+} from '@/lib/store';
 import { YStack } from 'tamagui';
-
-interface Expense {
-  id: number;
-  label: string;
-  amount: number;
-  auth_id: string;
-  created_at: string;
-}
+import { ExpenseFormat, syncExpense } from '@/lib/sync';
 
 export default function Spend() {
-  const session = userAuth((state) => state.currSession);
+  const [amountInput, setAmountInput] = useState('');
+  const [labelInput, setLabelInput] = useState('');
+  const [triggerRerender, setTriggerRerender] = useState(false);
 
-  const [amount, setAmount] = useState('');
-  const [label, setLabel] = useState('');
-  const [combinedExpenses, setCombinedExpenses] = useState<Expense[]>(
-    [],
-  );
+  const sampleExpense: ExpenseFormat = {
+    id: '',
+    label: labelInput,
+    amount: parseFloat(amountInput),
+    auth_id: '',
+    created_at: '',
+    date_deleted: null,
+  };
 
-  async function addLocalExpense() {
-    const n = toSyncExpenses.getState().expense.length;
-    const temp: Expense = {
-      id: n,
-      label: label,
-      amount: parseFloat(amount),
-      auth_id: '',
-      created_at: '',
-    };
+  async function insertExpense() {
+    const n = toInsertExpenses.getState().expense.length;
+    const temp = { ...sampleExpense, id: n.toString() + 'toInsert' };
+
     console.log(temp);
-    const current = toSyncExpenses.getState().expense;
-    toSyncExpenses.setState({ expense: [temp, ...current] });
-    setAmount('');
-    setLabel('');
-    const newCurrent = toSyncExpenses.getState().expense;
+    const current = toInsertExpenses.getState().expense;
+    toInsertExpenses.setState({ expense: [...current, temp] });
 
-    let resultCurrent = [];
-    //try to upload the tosync entries to supabase
-    if (session && session.user) {
-      for (const entry of newCurrent) {
-        const { error } = await supabase.from('Expenditure').insert({
-          label: entry.label,
-          amount: entry.amount,
-          auth_id: session.user.id,
-        });
+    const localCurrent = localExpenses.getState().expense;
+    localExpenses.setState({ expense: [...localCurrent, temp] });
 
-        if (error) {
-          console.log(error);
-          resultCurrent.push(entry);
-        } else {
-          console.log('worked well!');
-        }
-      }
-      toSyncExpenses.setState({ expense: resultCurrent });
-    }
-    fetchExpense();
+    setAmountInput('');
+    setLabelInput('');
+
+    await syncRenderer();
   }
 
-  function whatToSync() {
-    console.log(toSyncExpenses.getState().expense);
-  }
+  async function updateExpense(index: number, id: string) {
+    const temp = { ...sampleExpense, id: id };
 
-  async function addExpense() {
-    console.log('adding expense');
-    if (session && session.user) {
-      const { error } = await supabase.from('Expenditure').insert({
-        label: label,
-        amount: amount,
-        auth_id: session.user.id,
-      });
-
-      if (error) {
-        console.log(error);
-        return 'offline';
-      } else {
-        console.log('worked well!');
-        setAmount('');
-        setLabel('');
-        fetchExpense();
-        return 'success';
-      }
+    if (id.toString().includes('toInsert')) {
+      const index = toInsertExpenses
+        .getState()
+        .expense.findIndex((expense) => expense.id === id);
+      const current = toInsertExpenses.getState().expense;
+      current[index] = temp;
     } else {
-      console.log('not logged in :(');
+      const current = toUpdateExpenses.getState().expense;
+      toUpdateExpenses.setState({ expense: [...current, temp] });
     }
+    const localCurrent = localExpenses.getState().expense;
+    localCurrent[index] = temp;
+    localExpenses.setState({ expense: localCurrent });
+
+    setAmountInput('');
+    setLabelInput('');
+
+    await syncRenderer();
   }
 
-  async function fetchExpense() {
-    console.log('fetching expenses');
-    if (session && session.user) {
-      const { data, error } = await supabase
-        .from('Expenditure')
-        .select()
-        .eq('auth_id', session.user.id);
+  async function deleteExpense(
+    index: number,
+    id: string,
+    amount: number,
+    label: string,
+  ) {
+    const temp = {
+      ...sampleExpense,
+      id: id,
+      label: label,
+      amount: amount,
+      date_deleted: Date(),
+    };
 
-      if (error) {
-        console.log(error);
-      } else {
-        console.log('fetched worked!');
-        localExpenses.setState({ expense: data });
-      }
+    if (id.toString().includes('toInsert')) {
+      const index = toInsertExpenses
+        .getState()
+        .expense.findIndex((expense) => expense.id === id);
+      const current = toInsertExpenses.getState().expense;
+      current[index] = temp;
+    } else {
+      const current = toUpdateExpenses.getState().expense;
+      toUpdateExpenses.setState({ expense: [...current, temp] });
     }
-    setCombinedExpenses([
-      ...localExpenses.getState().expense,
-      ...toSyncExpenses.getState().expense,
-    ]);
+    const localCurrent = localExpenses.getState().expense;
+    localCurrent[index] = temp;
+    localExpenses.setState({ expense: localCurrent });
+
+    await syncRenderer();
+    hideDeleted();
   }
 
-  const Item = ({ label, amount }: Expense) => {
+  async function syncRenderer() {
+    await syncExpense();
+    setTriggerRerender(!triggerRerender);
+  }
+
+  function printToInsert() {
+    // console.log(toInsertExpenses.getState().expense);
+    console.log(localExpenses.getState().expense);
+  }
+
+  function hideDeleted() {
+    const current = localExpenses
+      .getState()
+      .expense.filter((entry) => entry.date_deleted === null);
+    localExpenses.setState({ expense: current });
+    setTriggerRerender(!triggerRerender);
+  }
+
+  const Item = ({
+    label,
+    amount,
+    id,
+    index,
+  }: ExpenseFormat & { index: number }) => {
     return (
       <View style={styles.expense}>
         <Text style={styles.item}>{label}</Text>
         <Text style={styles.item}>{amount}</Text>
+        <MyButton
+          label='Edit'
+          onPress={() => updateExpense(index, id)}
+        />
+        <MyButton
+          label='Delete'
+          onPress={() => deleteExpense(index, id, amount, label)}
+        />
       </View>
     );
   };
-
-  useEffect(() => {
-    fetchExpense();
-    setCombinedExpenses([
-      ...localExpenses.getState().expense,
-      ...toSyncExpenses.getState().expense,
-    ]);
-  }, []);
 
   return (
     <View style={styles.container}>
       <Input
         label='Amount'
         leftIcon={{ type: 'font-awesome', name: 'gift' }}
-        onChangeText={(text) => setAmount(text)}
-        value={amount}
+        onChangeText={(text) => setAmountInput(text)}
+        value={amountInput}
       />
       <Input
         label='Label'
         leftIcon={{ type: 'font-awesome', name: 'pencil' }}
-        onChangeText={(text) => setLabel(text)}
-        value={label}
+        onChangeText={(text) => setLabelInput(text)}
+        value={labelInput}
       />
+
       <YStack padding='$3' minWidth={250} alignSelf='center' gap='$2'>
-        <MyButton label='Add' onPress={() => addExpense()} />
-        <MyButton label='Sync' onPress={() => fetchExpense()} />
-        <MyButton label='local' onPress={() => addLocalExpense()} />
-        <MyButton label='what?' onPress={() => whatToSync()} />
+        <MyButton label='Insert' onPress={() => insertExpense()} />
+        <MyButton label='Sync' onPress={() => syncRenderer()} />
+        <MyButton
+          label='Print insert'
+          onPress={() => printToInsert()}
+        />
+        <MyButton label='hideDelete' onPress={() => hideDeleted()} />
       </YStack>
 
       <FlatList
-        data={combinedExpenses}
-        renderItem={({ item }) => <Item {...item} />}
+        data={localExpenses.getState().expense}
+        renderItem={({ item, index }) => (
+          <Item {...item} index={index} />
+        )}
         keyExtractor={(item) => item.id.toString()}
+        extraData={triggerRerender}
       />
     </View>
   );
