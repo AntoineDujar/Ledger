@@ -51,7 +51,7 @@ export default function App() {
         <Link href='/user/'>Go to user page</Link>
         <MyButton
           label='to user page'
-          onPress={() => router.push('/user/')}
+          onPress={() => router.push('buttonEdit')}
         />
       </View>
     </TamaguiProvider>
