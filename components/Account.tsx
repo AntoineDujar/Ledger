@@ -1,15 +1,8 @@
 import React, { useState } from 'react';
-import {
-  Alert,
-  StyleSheet,
-  Text,
-  View,
-  AppState,
-} from 'react-native';
 import { supabase } from '../lib/supabase';
-import { Button, Input } from 'react-native-elements';
 import MyButton from '../ui/MyButton';
 import { userAuth } from '../lib/store';
+import { H1, YStack } from 'tamagui';
 
 export default function Account() {
   const session = userAuth((state) => state.currSession);
@@ -19,24 +12,17 @@ export default function Account() {
   }
 
   return (
-    <View style={styles.container}>
+    <YStack gap='$3'>
       {session && session.user ? (
-        <Text style={styles.info}>Welcome {session.user.email}</Text>
+        <H1 fontFamily='$heading' textAlign='center'>
+          Welcome {session.user.email}
+        </H1>
       ) : (
-        <Text style={styles.info}>Problem with user</Text>
+        <H1 fontFamily='$heading' textAlign='center'>
+          Problem with user
+        </H1>
       )}
       <MyButton label='Sign out' onPress={() => signOut()} />
-    </View>
+    </YStack>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  info: {
-    marginBottom: 10,
-    fontSize: 25,
-  },
-});

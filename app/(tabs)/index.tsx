@@ -1,5 +1,5 @@
 import { Link, router } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, SafeAreaView } from 'react-native';
 import { useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import Auth from '../../components/Auth';
