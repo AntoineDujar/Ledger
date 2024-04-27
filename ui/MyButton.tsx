@@ -20,15 +20,15 @@ const MyButton: React.FC<ButtonProps> = ({
 }) => {
   return (
     <Theme name='light'>
-      <Theme name='green'>
+      <Theme name='red'>
         <Button
           alignSelf='center'
-          minWidth={220}
+          minWidth={120}
           size='$3'
           spaceFlex={true}
           onPress={onPress}
         >
-          <Text fontFamily='$body' fontWeight='800'>
+          <Text fontFamily='$body' fontWeight='400'>
             {label}
           </Text>
         </Button>
