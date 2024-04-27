@@ -1,5 +1,5 @@
 import React, { Children, useState, useEffect } from 'react';
-import { Button, Input, Text } from 'react-native-elements';
+import { Text } from 'react-native-elements';
 import MyButton from '@/ui/MyButton';
 import {
   Alert,
@@ -15,7 +15,7 @@ import {
   toUpdateExpenses,
   userAuth,
 } from '@/lib/store';
-import { YStack } from 'tamagui';
+import { YStack, Input, Theme, Form, Button } from 'tamagui';
 import { ExpenseFormat, syncExpense } from '@/lib/sync';
 
 export default function Spend() {
@@ -100,8 +100,8 @@ export default function Spend() {
     localCurrent[index] = temp;
     localExpenses.setState({ expense: localCurrent });
 
-    await syncRenderer();
     hideDeleted();
+    await syncRenderer();
   }
 
   async function syncRenderer() {
@@ -130,8 +130,8 @@ export default function Spend() {
   }: ExpenseFormat & { index: number }) => {
     return (
       <View style={styles.expense}>
-        <Text style={styles.item}>{label}</Text>
         <Text style={styles.item}>{amount}</Text>
+        <Text style={styles.item}>{label}</Text>
         <MyButton
           label='Edit'
           onPress={() => updateExpense(index, id)}
@@ -146,28 +146,42 @@ export default function Spend() {
 
   return (
     <View style={styles.container}>
-      <Input
-        label='Amount'
-        leftIcon={{ type: 'font-awesome', name: 'gift' }}
-        onChangeText={(text) => setAmountInput(text)}
-        value={amountInput}
-      />
-      <Input
-        label='Label'
-        leftIcon={{ type: 'font-awesome', name: 'pencil' }}
-        onChangeText={(text) => setLabelInput(text)}
-        value={labelInput}
-      />
+      <Theme name='light'>
+        <Theme name='red'>
+          <YStack
+            padding='$3'
+            minWidth={250}
+            alignSelf='center'
+            gap='$2'
+          >
+            <Input
+              placeholder={`Amount`}
+              onChangeText={(text) => setAmountInput(text)}
+              value={amountInput}
+            />
+            <Input
+              placeholder={`Label`}
+              onChangeText={(text) => setLabelInput(text)}
+              value={labelInput}
+            />
 
-      <YStack padding='$3' minWidth={250} alignSelf='center' gap='$2'>
-        <MyButton label='Insert' onPress={() => insertExpense()} />
-        <MyButton label='Sync' onPress={() => syncRenderer()} />
-        <MyButton
-          label='Print insert'
-          onPress={() => printToInsert()}
-        />
-        <MyButton label='hideDelete' onPress={() => hideDeleted()} />
-      </YStack>
+            <MyButton
+              label='Insert'
+              onPress={() => insertExpense()}
+            />
+
+            <MyButton label='Sync' onPress={() => syncRenderer()} />
+            <MyButton
+              label='Print insert'
+              onPress={() => printToInsert()}
+            />
+            <MyButton
+              label='hideDelete'
+              onPress={() => hideDeleted()}
+            />
+          </YStack>
+        </Theme>
+      </Theme>
 
       <FlatList
         data={localExpenses.getState().expense}
@@ -197,6 +211,6 @@ const styles = StyleSheet.create({
   item: {
     marginRight: 10,
     marginBottom: 10,
-    fontSize: 25,
+    fontSize: 15,
   },
 });
