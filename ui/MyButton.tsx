@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  Pressable,
-  View,
-  StyleSheet,
-  PressableProps,
-} from 'react-native';
+import { PressableProps } from 'react-native';
 
 import { Button, Text, Theme } from 'tamagui';
 
@@ -19,21 +14,17 @@ const MyButton: React.FC<ButtonProps> = ({
   ...props
 }) => {
   return (
-    <Theme name='light'>
-      <Theme name='red'>
-        <Button
-          alignSelf='center'
-          minWidth={120}
-          size='$3'
-          spaceFlex={true}
-          onPress={onPress}
-        >
-          <Text fontFamily='$body' fontWeight='400'>
-            {label}
-          </Text>
-        </Button>
-      </Theme>
-    </Theme>
+    <Button
+      alignSelf='center'
+      minWidth={120}
+      size='$3'
+      spaceFlex={true}
+      onPress={onPress}
+    >
+      <Text fontFamily='$body' fontWeight='400'>
+        {label}
+      </Text>
+    </Button>
   );
 };
 
