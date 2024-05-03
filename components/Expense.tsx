@@ -17,11 +17,33 @@ import {
 } from '@/lib/store';
 import { YStack, Input, Theme, Form, Button } from 'tamagui';
 import { ExpenseFormat, syncExpense } from '@/lib/sync';
+import { z, ZodError } from 'zod';
+
+const ExpenseSchema = z.object ({
+  id: z.string(),
+  label: z.string().refine(value => value.trim().length > 0, {
+    message: 'label is required',
+  }),
+  amount: z.number().min(0, 'Amount must be greater than or equal to 0'),
+  auth_id: z.string(),
+  created_at: z.string(),
+  date_deleteded: z.string().or(z.null()).or(z.undefined())
+})
+
+function validateExpenseData(data: ExpenseFormat){
+  const result = ExpenseSchema.safeParse(data);
+  if(!result.success){
+    console.error('validation errors: ', result.error.errors);
+    throw new Error('Validation failed');
+  }
+  return true;
+}
 
 export default function Spend() {
   const [amountInput, setAmountInput] = useState('');
   const [labelInput, setLabelInput] = useState('');
   const [triggerRerender, setTriggerRerender] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const sampleExpense: ExpenseFormat = {
     id: '',
@@ -34,42 +56,53 @@ export default function Spend() {
 
   async function insertExpense() {
     const n = toInsertExpenses.getState().expense.length;
-    const temp = { ...sampleExpense, id: n.toString() + 'toInsert' };
+    try{ 
+      const temp = { ...sampleExpense, id: n.toString() + 'toInsert' };
+      validateExpenseData(temp)
 
-    console.log(temp);
-    const current = toInsertExpenses.getState().expense;
-    toInsertExpenses.setState({ expense: [...current, temp] });
+      const current = toInsertExpenses.getState().expense;
+      toInsertExpenses.setState({ expense: [...current, temp] });
 
-    const localCurrent = localExpenses.getState().expense;
-    localExpenses.setState({ expense: [...localCurrent, temp] });
+      const localCurrent = localExpenses.getState().expense;
+      localExpenses.setState({ expense: [...localCurrent, temp] });
+  
+    } catch (error) {
+      setErrorMessage('Expense validation failed');
+    } finally {
+      setAmountInput('');
+      setLabelInput('');
+      setErrorMessage(' ');
+      await syncRenderer();
+    }
 
-    setAmountInput('');
-    setLabelInput('');
-
-    await syncRenderer();
   }
 
   async function updateExpense(index: number, id: string) {
-    const temp = { ...sampleExpense, id: id };
-
-    if (id.toString().includes('toInsert')) {
-      const index = toInsertExpenses
+    
+    try{
+      const temp = { ...sampleExpense, id: id };
+      validateExpenseData(temp);
+      if (id.toString().includes('toInsert')) {
+        const index = toInsertExpenses
         .getState()
         .expense.findIndex((expense) => expense.id === id);
-      const current = toInsertExpenses.getState().expense;
-      current[index] = temp;
-    } else {
-      const current = toUpdateExpenses.getState().expense;
-      toUpdateExpenses.setState({ expense: [...current, temp] });
+        const current = toInsertExpenses.getState().expense;
+        current[index] = temp;
+      } else {
+        const current = toUpdateExpenses.getState().expense;
+        toUpdateExpenses.setState({ expense: [...current, temp] });
+      }
+      const localCurrent = localExpenses.getState().expense;
+      localCurrent[index] = temp;
+      localExpenses.setState({ expense: localCurrent });
+    } catch (error) {
+      setErrorMessage('Expense validation failed');
+    } finally {
+      setAmountInput('');
+      setLabelInput('');
+      //setErrorMessage('');
+      await syncRenderer();
     }
-    const localCurrent = localExpenses.getState().expense;
-    localCurrent[index] = temp;
-    localExpenses.setState({ expense: localCurrent });
-
-    setAmountInput('');
-    setLabelInput('');
-
-    await syncRenderer();
   }
 
   async function deleteExpense(
@@ -164,7 +197,7 @@ export default function Spend() {
               onChangeText={(text) => setLabelInput(text)}
               value={labelInput}
             />
-
+            {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
             <MyButton
               label='Insert'
               onPress={() => insertExpense()}
@@ -213,4 +246,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 15,
   },
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
+ },
 });
